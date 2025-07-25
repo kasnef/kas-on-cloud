@@ -1,0 +1,1 @@
+import { getSiteId, getDocumentLibraryId } from "./core/microsoft";
