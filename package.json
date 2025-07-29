@@ -1,11 +1,20 @@
 {
   "name": "kas-on-cloud",
   "packageManager": "yarn@4.9.1",
+  "version": "0.0.1",
+  "description": "KAS on Cloud",
+  "type": "commonjs",
+  "scripts": {
+    "test": "jest"
+  },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.1.0",
     "@types/qs": "^6",
     "eslint": "^9.31.0",
+    "jest": "^30.0.5",
     "prettier": "^3.6.2",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
