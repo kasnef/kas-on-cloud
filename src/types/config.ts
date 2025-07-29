@@ -9,10 +9,16 @@ export interface MicrosoftConfig {
 export type ShowLog = boolean;
 
 export interface MicrosoftUploadConfig {
-  tenentName: string;
+  accessToken: string;
+  tenantName: string;
   siteName: string;
   fileName: string;
   fileContent: Buffer;
   isShowLog?: ShowLog;
   folderPath?: string; // Optional folder path in SharePoint
+}
+
+export interface FileUploadItem {
+  fileName: string;
+  fileContent: Buffer;
 }

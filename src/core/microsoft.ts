@@ -1,7 +1,6 @@
 import axios from "axios";
 import { helper } from "../utils/helper";
-import type { MicrosoftConfig, MicrosoftUploadConfig } from "../types/config";
-import { generateMicrosoftAccessToken } from "../utils/microsoft-connect";
+import type { FileUploadItem } from "../types/config";
 
 const siteIdCache = new Map<string, string>();
 const libraryIdCache = new Map<string, string>();
@@ -11,13 +10,13 @@ export async function showLog(show: boolean): Promise<boolean> {
 }
 
 export async function getSiteId(
-  tenentName: string,
+  tenantName: string,
   siteName: string,
   accessToken: string,
   isShowLog: boolean = false,
 ) {
-  if (siteIdCache.has(`${tenentName}-${siteName}`)) {
-    const cachedSiteId = siteIdCache.get(`${tenentName}-${siteName}`);
+  if (siteIdCache.has(`${tenantName}-${siteName}`)) {
+    const cachedSiteId = siteIdCache.get(`${tenantName}-${siteName}`);
     if (isShowLog) {
       console.log(
         `[kas-on-cloud]: Using cached site ID for "${siteName}": ${cachedSiteId}`,
@@ -26,7 +25,7 @@ export async function getSiteId(
     return cachedSiteId;
   }
 
-  if (!tenentName) {
+  if (!tenantName) {
     throw new Error("[kas-on-cloud]: Tenent name is required to get site ID");
   }
 
@@ -38,7 +37,7 @@ export async function getSiteId(
     throw new Error("[kas-on-cloud]: Access token is required to get site ID");
   }
 
-  const url = `https://graph.microsoft.com/v1.0/sites/${tenentName}.sharepoint.com:/sites/${siteName}`;
+  const url = `https://graph.microsoft.com/v1.0/sites/${tenantName}.sharepoint.com:/sites/${siteName}`;
 
   const response = await axios.get(url, {
     headers: {
@@ -63,7 +62,7 @@ export async function getSiteId(
     throw new Error("[kas-on-cloud]: Site ID not found in the response");
   }
 
-  siteIdCache.set(`${tenentName}-${siteName}`, siteId);
+  siteIdCache.set(`${tenantName}-${siteName}`, siteId);
 
   if (isShowLog) {
     console.log(`[kas-on-cloud]: Site id for "${siteName}": ${siteId}`);
@@ -73,13 +72,13 @@ export async function getSiteId(
 }
 
 export async function getDocumentLibraryId(
-  tenentName: string, // for getSiteId
+  tenantName: string, // for getSiteId
   siteName: string, // for getSiteId
   accessToken: string,
   isShowLog: boolean = false,
 ) {
-  if (libraryIdCache.has(`${tenentName}-${siteName}`)) {
-    const cachedLibraryId = libraryIdCache.get(`${tenentName}-${siteName}`);
+  if (libraryIdCache.has(`${tenantName}-${siteName}`)) {
+    const cachedLibraryId = libraryIdCache.get(`${tenantName}-${siteName}`);
     if (isShowLog) {
       console.log(
         `[kas-on-cloud]: Using cached document library ID for "${siteName}": ${cachedLibraryId}`,
@@ -100,7 +99,7 @@ export async function getDocumentLibraryId(
     );
   }
 
-  const siteId = await getSiteId(tenentName, siteName, accessToken, isShowLog);
+  const siteId = await getSiteId(tenantName, siteName, accessToken, isShowLog);
 
   const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/drives`;
 
@@ -137,7 +136,7 @@ export async function getDocumentLibraryId(
     );
   }
 
-  libraryIdCache.set(`${tenentName}-${siteName}`, libraryId);
+  libraryIdCache.set(`${tenantName}-${siteName}`, libraryId);
 
   if (isShowLog) {
     console.log(`[kas-on-cloud]: Document library ID: ${libraryId}`);
@@ -153,27 +152,17 @@ export async function clearCache() {
 }
 
 export async function uploadToSharePoint(
-  tokenDto: MicrosoftConfig,
-  uploadDto: MicrosoftUploadConfig,
+  accessToken: string,
+  tenantName: string,
+  siteName: string,
+  fileName: string,
+  fileContent: Buffer,
+  isShowLog = false,
+  folderPath = "",
 ) {
-  const {
-    tenentId,
-    clientId,
-    clientSecret,
-    scope = "https://graph.microsoft.com/.default",
-  } = tokenDto;
-
-  const {
-    tenentName,
-    siteName,
-    fileName,
-    fileContent,
-    isShowLog = false,
-    folderPath = "",
-  } = uploadDto;
-
   const missingParams = Object.entries({
-    tenentName,
+    accessToken,
+    tenantName,
     siteName,
     fileName,
     fileContent,
@@ -188,20 +177,10 @@ export async function uploadToSharePoint(
     );
   }
 
-  const accessToken = await generateMicrosoftAccessToken(
-    {
-      tenentId,
-      clientId,
-      clientSecret,
-      scope,
-    },
-    isShowLog,
-  );
-
   const librabyId = await getDocumentLibraryId(
-    tenentName,
+    tenantName,
     siteName,
-    accessToken.accessToken,
+    accessToken,
     isShowLog,
   );
 
@@ -215,7 +194,7 @@ export async function uploadToSharePoint(
 
   const response = await axios.put(url, fileContent, {
     headers: {
-      Authorization: `Bearer ${accessToken.accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/octet-stream",
     },
   });
@@ -235,31 +214,43 @@ export async function uploadToSharePoint(
   return response.data;
 }
 
-// export async function multiUploadToSharePoint(
-//   tenentName: string,
-//   siteName: string,
-//   files: { fileName: string; fileContent: Buffer }[],
-//   accessToken: string,
-//   isShowLog: boolean = false,
-// ) {
-//   const siteId = await getSiteId(tenentName, siteName, accessToken, isShowLog);
-//   const libraryId = await getDocumentLibraryId(
-//     tenentName,
-//     siteName,
-//     accessToken,
-//     isShowLog,
-//   );
+export async function multiUploadToSharepoint(
+  accessToken: string,
+  tenantName: string,
+  siteName: string,
+  files: FileUploadItem[],
+  isShowLog = false,
+  folderPath = "",
+) {
+  const missingParams = Object.entries({
+    accessToken,
+    tenantName,
+    siteName,
+    files,
+  })
+    .filter(([_, v]) => !v)
+    .map(([k]) => k);
 
-//   const uploadPromises = files.map(({ fileName, fileContent }) =>
-//     uploadToSharePoint(
-//       tenentName,
-//       siteName,
-//       fileName,
-//       fileContent,
-//       accessToken,
-//       isShowLog,
-//     ),
-//   );
+  if (missingParams.length > 0) {
+    throw new Error(
+      `[kas-on-cloud]: Missing required Microsoft config params: ${missingParams.join(", ")}`
+    );
+  }
 
-//   return Promise.all(uploadPromises);
-// }
+  if (!Array.isArray(files) || files.length === 0) {
+    throw new Error(`[kas-on-cloud]: 'files' must be a non-empty array`);
+  }
+
+  const librabyId = await getDocumentLibraryId(
+    tenantName,
+    siteName,
+    accessToken,
+    isShowLog,
+  );
+
+  const normalizeFolderPath = helper.normailzePath(folderPath);
+
+  const encodedPath = normalizeFolderPath?.trim()
+    ? `${`root:/${normalizeFolderPath}`}`
+    : `${"root:"}`;
+}
