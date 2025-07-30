@@ -199,19 +199,17 @@ export async function uploadToSharePoint(
     },
   });
 
-  if (response.status !== 201) {
-    throw new Error(
-      `[kas-on-cloud]: Failed to upload file: ${response.statusText}`,
-    );
-  }
-
   if (isShowLog) {
     console.log(
       `[kas-on-cloud]: File "${fileName}" uploaded successfully to SharePoint`,
     );
   }
 
-  return response.data;
+  if (!response.data) {
+    throw new Error("[kas-on-cloud]: No data returned from upload response");
+  }
+
+  return response.data?.webUrl;
 }
 
 export async function multiUploadToSharepoint(
