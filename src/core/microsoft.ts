@@ -1,6 +1,6 @@
 import axios from "axios";
-import { helper } from "../utils/helper";
 import type { FileUploadItem } from "../types/config";
+import { helper } from "../utils/helper";
 
 const siteIdCache = new Map<string, string>();
 const libraryIdCache = new Map<string, string>();
@@ -233,7 +233,7 @@ export async function multiUploadToSharepoint(
 
   if (missingParams.length > 0) {
     throw new Error(
-      `[kas-on-cloud]: Missing required Microsoft config params: ${missingParams.join(", ")}`
+      `[kas-on-cloud]: Missing required Microsoft config params: ${missingParams.join(", ")}`,
     );
   }
 
@@ -253,4 +253,41 @@ export async function multiUploadToSharepoint(
   const encodedPath = normalizeFolderPath?.trim()
     ? `${`root:/${normalizeFolderPath}`}`
     : `${"root:"}`;
+
+  const result = [];
+
+  for (const file of files) {
+    const { fileName, fileContent } = file;
+
+    const url = `https://graph.microsoft.com/v1.0/drives/${librabyId}/${encodedPath}/${fileName}:/content`;
+
+    if (!fileName || !fileContent) {
+      throw new Error(
+        `[kas-on-cloud]: Each file must have 'fileName' and 'fileContent' properties`,
+      );
+    }
+
+    const response = await axios.put(url, fileContent, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/octet-stream",
+      },
+    });
+
+    if (response.status !== 201) {
+      throw new Error(
+        `[kas-on-cloud]: Failed to upload file "${fileName}": ${response.statusText}`,
+      );
+    }
+
+    if (isShowLog) {
+      console.log(
+        `[kas-on-cloud]: File "${fileName}" uploaded successfully to SharePoint`,
+      );
+    }
+
+    result.push(response.data);
+  }
+
+  return result;
 }
