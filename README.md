@@ -65,6 +65,19 @@ To use SharePoint upload, you need:
 
 ---
 
+### ⚙️ Get access token
+```ts
+import { generateMicrosoftAccessToken } from "kas-on-cloud";
+const accessToken = await generateMicrosoftAccessToken({
+    "myTenantId",
+    "clientId",
+    "clientSecret",
+    "scope", // default: 'https://graph.microsoft.com/.default'
+  },
+  true // show log (default: false)
+)
+```
+
 ### 📄 Upload a Single File
 
 ```ts
@@ -76,7 +89,7 @@ const sharepointUrl = await uploadToSharePoint(
   "mySite",
   "myFile.txt",
   Buffer.from("Hello, SharePoint!"),
-  true,
+  true, // show log (default: false)
   "MyFolder" // folder path on sharepoint (optional)
 );
 ```
@@ -98,7 +111,7 @@ const result = await multiUploadToSharepoint(
   "mytenant",
   "mySite",
   files,
-  true,
+  true, // show log (default: false)
   "MyFolder/SubFolder" // folder path on sharepoint (optional)
 );
 ```
