@@ -10,10 +10,9 @@
 ![npm](https://img.shields.io/badge/npm-CB3837?style=for-the-badge\&logo=npm\&logoColor=white)
 ![yarn](https://img.shields.io/badge/Yarn-2C8EBB?style=for-the-badge\&logo=yarn\&logoColor=white)
 
-> ⚡ A lightweight Node.js library for uploading files to
-> **Microsoft SharePoint Document Library** or **Google Drive**.
-> ✅ Supports both single and multiple file uploads.
-
+>⚡A lightweight Node.js/TypeScript library to upload files to **Microsoft SharePoint Document Library** and **Google Drive**. <br>
+>✅ Supports **Multiple file uploads**, **single file upload** and **cache optimization**.<br>
+>☁️ Ideal for automating cloud file storage from backend services or CLI tools.<br>
 ---
 
 <!-- Table of Contents -->
