@@ -5,7 +5,8 @@
   "description": "KAS on Cloud",
   "type": "commonjs",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "tsup"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

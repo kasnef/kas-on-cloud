@@ -1,5 +1,8 @@
 import axios from "axios";
-import type { FileUploadItem } from "../types/config";
+import type {
+  FileUploadItem,
+  GetListFileFromSharepoint,
+} from "../types/config";
 import { helper } from "../utils/helper";
 
 const siteIdCache = new Map<string, string>();
@@ -288,4 +291,53 @@ export async function multiUploadToSharepoint(
   }
 
   return result;
+}
+
+export async function getItemListFromSharepoint({
+  siteId,
+  accessToken,
+  isShowLog = false,
+  driveId = "",
+  isShorten = false,
+}: GetListFileFromSharepoint) {
+  if (!siteId) {
+    throw new Error("[kas-on-cloud]: Site ID is required to get item list");
+  }
+
+  if (!accessToken) {
+    throw new Error(
+      "[kas-on-cloud]: Access token is required to get item list",
+    );
+  }
+
+  const url = driveId
+    ? `https://graph.microsoft.com/v1.0/sites/${siteId}/drives/${driveId}/root/children`
+    : `https://graph.microsoft.com/v1.0/sites/${siteId}/drive/root/children`;
+
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (response.status !== 200) {
+    throw new Error(
+      `[kas-on-cloud]: Failed to get item list: ${response.statusText}`,
+    );
+  }
+
+  if (isShowLog) {
+    console.log(`[kas-on-cloud]: Item list retrieved successfully`);
+    console.log(`[kas-on-cloud]: ${response.data.value.length} items found`);
+    if (isShorten) {
+      console.log(`[kas-on-cloud]: Shortened item list: comming soon`);
+    } else {
+      console.log(
+        `[kas-on-cloud]: ${JSON.stringify(response.data.value, null, 2)}`,
+      );
+    }
+  }
+
+  return response.data.value;
 }

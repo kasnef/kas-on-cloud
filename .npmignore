@@ -1,0 +1,7 @@
+src/__test__/
+src/test-function/
+tests/
+.vscode/
+tsup.config.ts
+tsconfig.json
+README-draft.md
