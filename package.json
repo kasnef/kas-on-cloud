@@ -1,9 +1,37 @@
 {
   "name": "kas-on-cloud",
   "packageManager": "yarn@4.9.1",
-  "version": "0.0.1",
-  "description": "KAS on Cloud",
+  "version": "1.0.1",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "description": "A unified Node.js library to upload files to SharePoint and Google Drive using Microsoft Graph API and Google Drive API.",
+  "homepage": "https://github.com/kasnef/kas-on-cloud#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kasnef/kas-on-cloud"
+  },
+  "bugs": {
+    "url": "https://github.com/kasnef/kas-on-cloud/issues"
+  },
   "type": "commonjs",
+  "keywords": [
+    "upload file",
+    "sharepoint",
+    "google drive",
+    "microsoft graph api",
+    "nodejs upload",
+    "cloud storage",
+    "typescript",
+    "document library",
+    "multi-upload",
+    "google drive api",
+    "onedrive"
+  ],
+  "author": "Cá Lang Thang",
+  "license": "MIT",
   "scripts": {
     "test": "jest",
     "build": "tsup"
