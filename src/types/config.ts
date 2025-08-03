@@ -22,3 +22,35 @@ export interface FileUploadItem {
   fileName: string;
   fileContent: Buffer;
 }
+
+export interface GetListFileFromSharepoint {
+  siteId: string;
+  accessToken: string;
+  isShowLog?: ShowLog;
+  driveId?: string;
+  isShorten?: boolean;
+}
+
+export interface GetListFileFromSharepointResponse {
+  siteId: string;
+  folder: {
+    id: string;
+    name: string;
+    createdBy: {
+      user: {
+        displayName: string;
+        email: string;
+        id: string;
+      };
+    };
+    eTag: string;
+    lastModifiedDateTime: string;
+    lastModifiedBy: {
+      user: {
+        displayName: string;
+        email: string;
+        id: string;
+      };
+    }
+  }[];
+}
