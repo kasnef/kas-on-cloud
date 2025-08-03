@@ -18,11 +18,17 @@
   },
   "type": "commonjs",
   "keywords": [
+    "upload file",
     "sharepoint",
-    "google-drive",
-    "upload",
-    "cloud",
-    "microsoft-graph"
+    "google drive",
+    "microsoft graph api",
+    "nodejs upload",
+    "cloud storage",
+    "typescript",
+    "document library",
+    "multi-upload",
+    "google drive api",
+    "onedrive"
   ],
   "author": "Cá Lang Thang",
   "license": "MIT",
