@@ -19,10 +19,10 @@ export async function generateMicrosoftAccessToken(
   config: MicrosoftConfig,
   isShowLog = false,
 ): Promise<MicrosoftAccessTokenResponse> {
-  const { tenentId, clientId, clientSecret, scope, grandType } = config;
+  const { tenantId, clientId, clientSecret, scope, grantType } = config;
 
   const missingParams = Object.entries({
-    tenentId,
+    tenantId,
     clientId,
     clientSecret,
     scope,
@@ -36,10 +36,11 @@ export async function generateMicrosoftAccessToken(
     );
   }
 
-  const tokenUrl = `https://login.microsoftonline.com/${tenentId}/oauth2/v2.0/token`;
+  const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
   const now = Date.now();
 
-  const cached = tokenCache.get(clientId!);
+  const cacheKey = `${clientId}:${scope}`;
+  const cached = tokenCache.get(cacheKey);
   if (cached && now < cached.expiresAt) {
     if (isShowLog) console.log("✅[kas-on-cloud]: Token from cache:", clientId);
     return {
@@ -50,7 +51,9 @@ export async function generateMicrosoftAccessToken(
   }
 
   const data = qs.stringify({
-    grant_type: grandType || "client_credentials",
+    client_id: clientId!,
+    client_secret: clientSecret!,
+    grant_type: grantType || "client_credentials",
     scope,
   });
 
@@ -74,7 +77,7 @@ export async function generateMicrosoftAccessToken(
     );
   }
 
-  const expiresAt = now + expires_in * 1000;
+  const expiresAt = now + (expires_in - 60) * 1000;
 
   tokenCache.set(clientId!, {
     token: access_token,
