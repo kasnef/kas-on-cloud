@@ -211,7 +211,19 @@ export async function uploadToSharePoint(
     throw new Error("[kas-on-cloud]: No data returned from upload response");
   }
 
-  return response.data?.webUrl;
+  const res = {
+    id: response.data.id,
+    name: response.data.name,
+    size: response.data.size,
+    url: response.data.webUrl,
+    downloadUrl: response.data["@microsoft.graph.downloadUrl"],
+    createdDateTime: response.data.createdDateTime,
+    lastModifiedDateTime: response.data.lastModifiedDateTime,
+  };
+
+  console.log(`[kas-on-cloud]: Upload result: ${JSON.stringify(res, null, 2)}`);
+
+  return res;
 }
 
 export async function multiUploadToSharepoint(
@@ -289,7 +301,17 @@ export async function multiUploadToSharepoint(
     result.push(response.data);
   }
 
-  return result;
+  const res = result.map((item) => ({
+    id: item.data.id,
+    name: item.data.name,
+    size: item.data.size,
+    url: item.data.webUrl,
+    downloadUrl: item.data["@microsoft.graph.downloadUrl"],
+    createdDateTime: item.data.createdDateTime,
+    lastModifiedDateTime: item.data.lastModifiedDateTime,
+  }));
+
+  return res;
 }
 
 export async function getItemListFromSharepoint({
