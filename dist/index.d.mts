@@ -1,9 +1,9 @@
 interface MicrosoftConfig {
-    tenentId?: string;
+    tenantId?: string;
     clientId?: string;
     clientSecret?: string;
     scope?: string | 'https://graph.microsoft.com/.default';
-    grandType?: string | 'client_credentials';
+    grantType?: string | 'client_credentials';
 }
 type ShowLog = boolean;
 interface FileUploadItem {
@@ -23,8 +23,24 @@ declare function getDocumentLibraryId(tenantName: string, // for getSiteId
 siteName: string, // for getSiteId
 accessToken: string, isShowLog?: boolean): Promise<any>;
 declare function clearCache(): Promise<void>;
-declare function uploadToSharePoint(accessToken: string, tenantName: string, siteName: string, fileName: string, fileContent: Buffer, isShowLog?: boolean, folderPath?: string): Promise<any>;
-declare function multiUploadToSharepoint(accessToken: string, tenantName: string, siteName: string, files: FileUploadItem[], isShowLog?: boolean, folderPath?: string): Promise<any[]>;
+declare function uploadToSharePoint(accessToken: string, tenantName: string, siteName: string, fileName: string, fileContent: Buffer, isShowLog?: boolean, folderPath?: string): Promise<{
+    id: any;
+    name: any;
+    size: any;
+    url: any;
+    downloadUrl: any;
+    createdDateTime: any;
+    lastModifiedDateTime: any;
+}>;
+declare function multiUploadToSharepoint(accessToken: string, tenantName: string, siteName: string, files: FileUploadItem[], isShowLog?: boolean, folderPath?: string): Promise<{
+    id: any;
+    name: any;
+    size: any;
+    url: any;
+    downloadUrl: any;
+    createdDateTime: any;
+    lastModifiedDateTime: any;
+}[]>;
 declare function getItemListFromSharepoint({ siteId, accessToken, isShowLog, driveId, isShorten, }: GetListFileFromSharepoint): Promise<any>;
 
 type MicrosoftAccessTokenResponse = {

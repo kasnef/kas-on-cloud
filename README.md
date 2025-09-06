@@ -2,6 +2,8 @@
 
 # 📎 kas-on-cloud – Upload Files to SharePoint & Google Drive with Node.js
 
+> If this was helpful, give it a star!⭐ Thanks so muchhh ❤️
+
 <!-- Badges -->
 
 ![OneDrive](https://img.shields.io/badge/OneDrive-white?style=for-the-badge&logo=Microsoft%20OneDrive&logoColor=0078D4)
