@@ -64,7 +64,7 @@ async function getSiteId(tenantName, siteName, accessToken, isShowLog = false) {
     return cachedSiteId;
   }
   if (!tenantName) {
-    throw new Error("[kas-on-cloud]: Tenent name is required to get site ID");
+    throw new Error("[kas-on-cloud]: Tenant name is required to get site ID");
   }
   if (!siteName) {
     throw new Error("[kas-on-cloud]: Site name is required to get site ID");
@@ -159,9 +159,8 @@ async function uploadToSharePoint(accessToken, tenantName, siteName, fileName, f
     tenantName,
     siteName,
     fileName,
-    fileContent,
-    isShowLog
-  }).filter(([_, v]) => !v).map(([k]) => k);
+    fileContent
+  }).filter(([_, v]) => v === void 0 || v === null || v === "").map(([k]) => k);
   if (missingParams.length > 0) {
     throw new Error(
       `[kas-on-cloud]: Missing required Microsoft config params: ${missingParams.join(", ")}`
@@ -190,7 +189,17 @@ async function uploadToSharePoint(accessToken, tenantName, siteName, fileName, f
   if (!response.data) {
     throw new Error("[kas-on-cloud]: No data returned from upload response");
   }
-  return response.data?.webUrl;
+  const res = {
+    id: response.data.id,
+    name: response.data.name,
+    size: response.data.size,
+    url: response.data.webUrl,
+    downloadUrl: response.data["@microsoft.graph.downloadUrl"],
+    createdDateTime: response.data.createdDateTime,
+    lastModifiedDateTime: response.data.lastModifiedDateTime
+  };
+  console.log(`[kas-on-cloud]: Upload result: ${JSON.stringify(res, null, 2)}`);
+  return res;
 }
 async function multiUploadToSharepoint(accessToken, tenantName, siteName, files, isShowLog = false, folderPath = "") {
   const missingParams = Object.entries({
@@ -242,7 +251,16 @@ async function multiUploadToSharepoint(accessToken, tenantName, siteName, files,
     }
     result.push(response.data);
   }
-  return result;
+  const res = result.map((item) => ({
+    id: item.data.id,
+    name: item.data.name,
+    size: item.data.size,
+    url: item.data.webUrl,
+    downloadUrl: item.data["@microsoft.graph.downloadUrl"],
+    createdDateTime: item.data.createdDateTime,
+    lastModifiedDateTime: item.data.lastModifiedDateTime
+  }));
+  return res;
 }
 async function getItemListFromSharepoint({
   siteId,
@@ -290,9 +308,9 @@ var import_axios2 = __toESM(require("axios"));
 var import_qs = __toESM(require("qs"));
 var tokenCache = /* @__PURE__ */ new Map();
 async function generateMicrosoftAccessToken(config, isShowLog = false) {
-  const { tenentId, clientId, clientSecret, scope, grandType } = config;
+  const { tenantId, clientId, clientSecret, scope, grantType } = config;
   const missingParams = Object.entries({
-    tenentId,
+    tenantId,
     clientId,
     clientSecret,
     scope
@@ -302,9 +320,10 @@ async function generateMicrosoftAccessToken(config, isShowLog = false) {
       `[kas-on-cloud]: Missing required Microsoft config params: ${missingParams.join(", ")}`
     );
   }
-  const tokenUrl = `https://login.microsoftonline.com/${tenentId}/oauth2/v2.0/token`;
+  const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
   const now = Date.now();
-  const cached = tokenCache.get(clientId);
+  const cacheKey = `${clientId}:${scope}`;
+  const cached = tokenCache.get(cacheKey);
   if (cached && now < cached.expiresAt) {
     if (isShowLog) console.log("\u2705[kas-on-cloud]: Token from cache:", clientId);
     return {
@@ -314,7 +333,9 @@ async function generateMicrosoftAccessToken(config, isShowLog = false) {
     };
   }
   const data = import_qs.default.stringify({
-    grant_type: grandType || "client_credentials",
+    client_id: clientId,
+    client_secret: clientSecret,
+    grant_type: grantType || "client_credentials",
     scope
   });
   const headers = {
@@ -334,7 +355,7 @@ async function generateMicrosoftAccessToken(config, isShowLog = false) {
 ${JSON.stringify(res.data, null, 2)}`
     );
   }
-  const expiresAt = now + expires_in * 1e3;
+  const expiresAt = now + (expires_in - 60) * 1e3;
   tokenCache.set(clientId, {
     token: access_token,
     expiresAt
