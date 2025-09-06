@@ -1,4 +1,4 @@
-import {
+export {
   getSiteId,
   getDocumentLibraryId,
   getItemListFromSharepoint,
@@ -7,4 +7,4 @@ import {
   clearCache,
 } from "./core/microsoft";
 
-import { generateMicrosoftAccessToken } from "./utils/microsoft-connect";
+export { generateMicrosoftAccessToken } from "./utils/microsoft-connect";
