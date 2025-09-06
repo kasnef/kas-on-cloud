@@ -29,7 +29,7 @@ export async function getSiteId(
   }
 
   if (!tenantName) {
-    throw new Error("[kas-on-cloud]: Tenent name is required to get site ID");
+    throw new Error("[kas-on-cloud]: Tenant name is required to get site ID");
   }
 
   if (!siteName) {
@@ -169,9 +169,8 @@ export async function uploadToSharePoint(
     siteName,
     fileName,
     fileContent,
-    isShowLog,
   })
-    .filter(([_, v]) => !v)
+    .filter(([_, v]) => v === undefined || v === null || v === "")
     .map(([k]) => k);
 
   if (missingParams.length > 0) {

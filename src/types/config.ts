@@ -1,9 +1,9 @@
 export interface MicrosoftConfig {
-  tenentId?: string;
+  tenantId?: string;
   clientId?: string;
   clientSecret?: string;
   scope?: string | 'https://graph.microsoft.com/.default';
-  grandType?: string | 'client_credentials';
+  grantType?: string | 'client_credentials';
 }
 
 export type ShowLog = boolean;
