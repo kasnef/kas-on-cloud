@@ -9,6 +9,11 @@ export interface MicrosoftConfig {
 
 export type ShowLog = boolean;
 
+export interface getDriveId {
+  siteId: string;
+  accessToken: string;
+}
+
 export interface MicrosoftUploadConfig {
   accessToken: string;
   tenantName: string;

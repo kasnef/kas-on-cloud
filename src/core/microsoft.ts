@@ -8,6 +8,7 @@ import type {
   SearchItemInSharepoint,
   SharepointDownloadResult,
   DownloadItemFromSharepoint,
+  getDriveId,
 } from "../types/config";
 import { helper } from "../utils/helper";
 
@@ -78,6 +79,73 @@ export async function getSiteId(
   }
 
   return siteId;
+}
+
+export async function getDriveIdFromSite({
+  siteId,
+  accessToken,
+}: getDriveId): Promise<string> {
+  if (!siteId)
+    throw new Error("[kas-on-cloud]: Site ID is required to get drive ID");
+  if (!accessToken)
+    throw new Error("[kas-on-cloud]: Access token is required to get drive ID");
+
+  try {
+    const response = await axios.get(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/drive`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+
+    const driveId = response.data?.id;
+
+    if (!driveId)
+      throw new Error("[kas-on-cloud]: Could not find drive ID for this site");
+
+    return driveId;
+  } catch (error: any) {
+    const msg =
+      error.response?.data?.error?.message || error.message || "Unknown error";
+    throw new Error(`[kas-on-cloud]: Failed to get drive ID - ${msg}`);
+  }
+}
+
+export async function getAllDrivesFromSite(
+  siteId: string,
+  accessToken: string,
+): Promise<
+  {
+    id: string;
+    name: string;
+    webUrl: string;
+  }[]
+> {
+  if (!siteId)
+    throw new Error("[kas-on-cloud]: Site ID is required to get drives");
+  if (!accessToken)
+    throw new Error("[kas-on-cloud]: Access token is required to get drives");
+
+  try {
+    const response = await axios.get(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/drives`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+
+    const drives = response.data?.value || [];
+
+    return drives.map((d: any) => ({
+      id: d.id,
+      name: d.name,
+      webUrl: d.webUrl,
+    }));
+  } catch (error: any) {
+    const msg =
+      error.response?.data?.error?.message || error.message || "Unknown error";
+    throw new Error(`[kas-on-cloud]: Failed to get all drives - ${msg}`);
+  }
 }
 
 export async function getDocumentLibraryId(

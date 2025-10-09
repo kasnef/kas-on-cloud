@@ -133,41 +133,6 @@ const accessToken = tokenResponse.accessToken;
 }
 ```
 
-### 🧭 getSiteId()
-
-> Fetches the unique identifier for a SharePoint site based on the tenant and site names.
-
-```ts
-getSiteId(
-  tenantName: string,
-  siteName: string,
-  accessToken: string,
-  isShowLog = false
-): Promise<string>
-```
-
-#### Parameters
-
-- `tenantName` (string): Your SharePoint tenant name (e.g., `mytenant`).
-- `siteName` (string): The name of the SharePoint site (e.g., `mySite`).
-- `accessToken` (string): A valid OAuth 2.0 access token.
-- `isShowLog` (boolean, optional): Set to `true` to enable logging. Defaults to `false`.
-
-#### ✅ Example
-
-```ts
-import { getSiteId } from "kas-on-cloud";
-
-const siteId = await getSiteId("mytenant", "mysite", accessToken, true);
-console.log(`Site ID: ${siteId}`);
-```
-
-#### ↪️ Response
-
-```JSON
-"mytenant.sharepoint.com,xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx,xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-```
-
 ---
 
 ### ♻️ renewMicrosoftToken()
@@ -219,6 +184,126 @@ console.log(newToken.accessToken);
   "expiresIn": 3599,
   "extExpiresIn": 3599
 }
+```
+
+---
+
+### 🧭 getSiteId()
+
+> Fetches the unique identifier for a SharePoint site based on the tenant and site names.
+
+```ts
+getSiteId(
+  tenantName: string,
+  siteName: string,
+  accessToken: string,
+  isShowLog = false
+): Promise<string>
+```
+
+#### Parameters
+
+- `tenantName` (string): Your SharePoint tenant name (e.g., `mytenant`).
+- `siteName` (string): The name of the SharePoint site (e.g., `mySite`).
+- `accessToken` (string): A valid OAuth 2.0 access token.
+- `isShowLog` (boolean, optional): Set to `true` to enable logging. Defaults to `false`.
+
+#### ✅ Example
+
+```ts
+import { getSiteId } from "kas-on-cloud";
+
+const siteId = await getSiteId("mytenant", "mysite", accessToken, true);
+console.log(`Site ID: ${siteId}`);
+```
+
+#### ↪️ Response
+
+```JSON
+"mytenant.sharepoint.com,xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx,xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+```
+
+---
+
+### 🧭 getDriveIdFromSite()
+
+> Fetches the default Drive ID (document library) for a given SharePoint site using its siteId.
+
+```ts
+getDriveIdFromSite(
+  siteId: string,
+  accessToken: string
+): Promise<string>
+```
+
+#### Parameters
+
+- `siteId` (string): The unique identifier of your SharePoint site. You can obtain it using getSiteId() beforehand.
+- `accessToken` (string): A valid OAuth 2.0 access token with Microsoft Graph permissions (e.g., Files.Read, Sites.Read.All).
+
+#### ✅ Example
+
+```ts
+import { getDriveIdFromSite } from "kas-on-cloud";
+
+const driveId = await getDriveIdFromSite(siteId, accessToken);
+console.log(`Drive ID: ${driveId}`);
+```
+
+#### ↪️ Response
+
+```JSON
+"b!4U8mx5a9hEya7v8g3s-BYJfC3s1MbRNNt5jZcVMBaE8RjhUe7X3ylRbXeA8S"
+```
+
+---
+
+### 🧭 getAllDrivesFromSite()
+
+> Retrieves a list of all document libraries (drives) associated with a SharePoint site.
+
+```ts
+getAllDrivesFromSite(
+  siteId: string,
+  accessToken: string
+): Promise<
+  {
+    id: string;
+    name: string;
+    webUrl: string;
+  }[]
+>
+```
+
+#### Parameters
+
+- `siteId` (string): The unique identifier of your SharePoint site. You can obtain it using getSiteId() beforehand.
+- `accessToken` (string): A valid OAuth 2.0 access token with Microsoft Graph permissions (e.g., Files.Read, Sites.Read.All).
+
+#### ✅ Example
+
+```ts
+import { getAllDrivesFromSite } from "kas-on-cloud";
+
+const drives = await getAllDrivesFromSite(siteId, accessToken);
+console.log("Available drives:", drives);
+```
+
+#### ↪️ Response
+
+```JSON
+[
+  {
+    "id": "b!9A7VJ9spkUeE1h6aaYZb9aRAxG01GzxJm_3uZsA3Sd3zD5yFvPp2PCbU4u7Hg",
+    "name": "Documents",
+    "webUrl": "https://mytenant.sharepoint.com/sites/mysite/Shared%20Documents"
+  },
+  {
+    "id": "b!kU4tsP8ghEeE9u8Zb5X2WqUB2b4KxAqLp9uX2PzNqEbZyY7x2Y4rJzK5Zs4RA",
+    "name": "Site Assets",
+    "webUrl": "https://mytenant.sharepoint.com/sites/mysite/SiteAssets"
+  }
+]
 ```
 
 ---

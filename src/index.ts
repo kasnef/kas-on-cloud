@@ -1,5 +1,7 @@
 export {
   getSiteId,
+  getDriveIdFromSite,
+  getAllDrivesFromSite,
   getDocumentLibraryId,
   // --- read / download ---
   getItemListFromSharepoint,
