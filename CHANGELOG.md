@@ -4,6 +4,28 @@ All notable changes to this project will be recorded in this file.
 
 ---
 
+## 🚀 [1.0.10] - 2025-10-09 - Fix build & republish (09/10/2025)
+
+### 🛠 Fixes & Maintenance
+- Rebuilt package due to missing compiled files in version **1.0.9**.
+- Re-published to ensure all new SharePoint handler functions are properly included in the distributed build.
+
+### ⚙️ Technical Notes
+- No functional code changes.
+- No API modifications.
+- Same features as version **1.0.9**:
+  - `getDriveIdFromSite`
+  - `getAllDrivesFromSite`
+  - `getItemByIdFromSharepoint`
+  - `getItemByPathFromSharepoint`
+  - `getFolderChildrenFromSharepoint`
+  - `searchItemInSharepoint`
+  - `downloadItemFromSharepoint`
+  - `renewMicrosoftToken`
+
+> ✅ This release only fixes the missing build artifacts — functionally identical to `v1.0.9`.
+---
+
 ## 🚀 [1.0.9] - 2025-10-09
 
 ### ✨ Added

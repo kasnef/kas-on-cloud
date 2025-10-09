@@ -55,6 +55,53 @@ async function getSiteId(tenantName, siteName, accessToken, isShowLog = false) {
   }
   return siteId;
 }
+async function getDriveIdFromSite({
+  siteId,
+  accessToken
+}) {
+  if (!siteId)
+    throw new Error("[kas-on-cloud]: Site ID is required to get drive ID");
+  if (!accessToken)
+    throw new Error("[kas-on-cloud]: Access token is required to get drive ID");
+  try {
+    const response = await axios.get(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/drive`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }
+    );
+    const driveId = response.data?.id;
+    if (!driveId)
+      throw new Error("[kas-on-cloud]: Could not find drive ID for this site");
+    return driveId;
+  } catch (error) {
+    const msg = error.response?.data?.error?.message || error.message || "Unknown error";
+    throw new Error(`[kas-on-cloud]: Failed to get drive ID - ${msg}`);
+  }
+}
+async function getAllDrivesFromSite(siteId, accessToken) {
+  if (!siteId)
+    throw new Error("[kas-on-cloud]: Site ID is required to get drives");
+  if (!accessToken)
+    throw new Error("[kas-on-cloud]: Access token is required to get drives");
+  try {
+    const response = await axios.get(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/drives`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }
+    );
+    const drives = response.data?.value || [];
+    return drives.map((d) => ({
+      id: d.id,
+      name: d.name,
+      webUrl: d.webUrl
+    }));
+  } catch (error) {
+    const msg = error.response?.data?.error?.message || error.message || "Unknown error";
+    throw new Error(`[kas-on-cloud]: Failed to get all drives - ${msg}`);
+  }
+}
 async function getDocumentLibraryId(tenantName, siteName, accessToken, isShowLog = false) {
   if (libraryIdCache.has(`${tenantName}-${siteName}`)) {
     const cachedLibraryId = libraryIdCache.get(`${tenantName}-${siteName}`);
@@ -260,10 +307,227 @@ async function getItemListFromSharepoint({
   }
   return response.data.value;
 }
+async function getItemByIdFromSharepoint({
+  siteId,
+  accessToken,
+  itemId,
+  driveId = "",
+  isShowLog = false
+}) {
+  if (!siteId) {
+    throw new Error("[kas-on-cloud]: Site ID is required to get item");
+  }
+  if (!accessToken) {
+    throw new Error("[kas-on-cloud]: Access token is required to get item");
+  }
+  if (!itemId) {
+    throw new Error("[kas-on-cloud]: Item ID is required to get item");
+  }
+  const url = driveId ? `https://graph.microsoft.com/v1.0/sites/${siteId}/drives/${driveId}/items/${itemId}` : `https://graph.microsoft.com/v1.0/sites/${siteId}/drive/items/${itemId}`;
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+    if (response.status !== 200) {
+      throw new Error(
+        `[kas-on-cloud]: Failed to get item: ${response.statusText}`
+      );
+    }
+    const item = response.data;
+    if (isShowLog) {
+      console.log(`[kas-on-cloud]: Item retrieved successfully`);
+      console.log(`[kas-on-cloud]: Item name: ${item.name}`);
+      console.log(`[kas-on-cloud]: Item ID: ${item.id}`);
+      if (item["@microsoft.graph.downloadUrl"]) {
+        console.log(`[kas-on-cloud]: Download URL found`);
+      }
+    }
+    return {
+      id: item.id,
+      name: item.name,
+      size: item.size,
+      webUrl: item.webUrl,
+      downloadUrl: item["@microsoft.graph.downloadUrl"] || null,
+      lastModifiedDateTime: item.lastModifiedDateTime,
+      createdDateTime: item.createdDateTime,
+      file: item.file || null,
+      folder: item.folder || null
+    };
+  } catch (error) {
+    const message = error.response?.data?.error?.message || error.message || "Unknown error";
+    throw new Error(`[kas-on-cloud]: Failed to get item: ${message}`);
+  }
+}
+async function getItemByPathFromSharepoint({
+  siteId,
+  accessToken,
+  path,
+  driveId = "",
+  isShowLog = false
+}) {
+  if (!siteId) {
+    throw new Error("[kas-on-cloud]: Site ID is required to get item by path");
+  }
+  if (!accessToken) {
+    throw new Error(
+      "[kas-on-cloud]: Access token is required to get item by path"
+    );
+  }
+  if (!path) {
+    throw new Error("[kas-on-cloud]: Path is required to get item by path");
+  }
+  const url = driveId ? `https://graph.microsoft.com/v1.0/sites/${siteId}/drives/${driveId}${path}` : `https://graph.microsoft.com/v1.0/sites/${siteId}/drive${path}`;
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+    }
+  });
+  if (response.status !== 200) {
+    throw new Error(
+      `[kas-on-cloud]: Failed to get item by path: ${response.statusText}`
+    );
+  }
+  const item = response.data;
+  if (isShowLog) {
+    console.log(`[kas-on-cloud]: Item retrieved by path successfully`);
+    console.log(`[kas-on-cloud]: Item name: ${item.name}`);
+    if (item["@microsoft.graph.downloadUrl"]) {
+      console.log(`[kas-on-cloud]: Download URL available`);
+    }
+  }
+  return {
+    id: item.id,
+    name: item.name,
+    size: item.size,
+    webUrl: item.webUrl,
+    downloadUrl: item["@microsoft.graph.downloadUrl"] || null,
+    lastModifiedDateTime: item.lastModifiedDateTime,
+    createdDateTime: item.createdDateTime
+  };
+}
+async function getFolderChildrenFromSharepoint({
+  siteId,
+  accessToken,
+  folderItemId = "",
+  folderPath = "",
+  driveId = "",
+  isShowLog = false
+}) {
+  if (!siteId) {
+    throw new Error(
+      "[kas-on-cloud]: Site ID is required to get folder children"
+    );
+  }
+  if (!accessToken) {
+    throw new Error(
+      "[kas-on-cloud]: Access token is required to get folder children"
+    );
+  }
+  if (!folderItemId && !folderPath) {
+    throw new Error(
+      "[kas-on-cloud]: Either folderItemId or folderPath is required"
+    );
+  }
+  const url = driveId ? folderItemId ? `https://graph.microsoft.com/v1.0/sites/${siteId}/drives/${driveId}/items/${folderItemId}/children` : `https://graph.microsoft.com/v1.0/sites/${siteId}/drives/${driveId}${folderPath}/children` : folderItemId ? `https://graph.microsoft.com/v1.0/sites/${siteId}/drive/items/${folderItemId}/children` : `https://graph.microsoft.com/v1.0/sites/${siteId}/drive${folderPath}/children`;
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+    }
+  });
+  if (response.status !== 200) {
+    throw new Error(
+      `[kas-on-cloud]: Failed to get folder children: ${response.statusText}`
+    );
+  }
+  if (isShowLog) {
+    console.log(`[kas-on-cloud]: Folder children retrieved successfully`);
+    console.log(`[kas-on-cloud]: ${response.data.value.length} items found`);
+  }
+  return response.data.value.map((item) => ({
+    id: item.id,
+    name: item.name,
+    size: item.size,
+    isFolder: !!item.folder,
+    webUrl: item.webUrl,
+    downloadUrl: item["@microsoft.graph.downloadUrl"] || null
+  }));
+}
+async function searchItemInSharepoint({
+  siteId,
+  accessToken,
+  keyword,
+  driveId = "",
+  isShowLog = false
+}) {
+  if (!siteId) {
+    throw new Error("[kas-on-cloud]: Site ID is required to search item");
+  }
+  if (!accessToken) {
+    throw new Error("[kas-on-cloud]: Access token is required to search item");
+  }
+  if (!keyword) {
+    throw new Error("[kas-on-cloud]: Keyword is required to search item");
+  }
+  const url = driveId ? `https://graph.microsoft.com/v1.0/sites/${siteId}/drives/${driveId}/root/search(q='${encodeURIComponent(keyword)}')` : `https://graph.microsoft.com/v1.0/sites/${siteId}/drive/root/search(q='${encodeURIComponent(keyword)}')`;
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+    }
+  });
+  if (response.status !== 200) {
+    throw new Error(
+      `[kas-on-cloud]: Failed to search item: ${response.statusText}`
+    );
+  }
+  if (isShowLog) {
+    console.log(`[kas-on-cloud]: Search completed`);
+    console.log(`[kas-on-cloud]: Found ${response.data.value.length} results`);
+  }
+  return response.data.value.map((item) => ({
+    id: item.id,
+    name: item.name,
+    size: item.size,
+    webUrl: item.webUrl,
+    downloadUrl: item["@microsoft.graph.downloadUrl"] || null
+  }));
+}
+async function downloadItemFromSharepoint({
+  siteId,
+  accessToken,
+  itemId,
+  driveId = ""
+}) {
+  if (!siteId)
+    throw new Error("[kas-on-cloud]: Site ID is required to download item");
+  if (!accessToken)
+    throw new Error(
+      "[kas-on-cloud]: Access token is required to download item"
+    );
+  if (!itemId)
+    throw new Error("[kas-on-cloud]: Item ID is required to download item");
+  const url = driveId ? `https://graph.microsoft.com/v1.0/sites/${siteId}/drives/${driveId}/items/${itemId}/content` : `https://graph.microsoft.com/v1.0/sites/${siteId}/drive/items/${itemId}/content`;
+  const response = await axios.get(url, {
+    responseType: "stream",
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  const fileName = response.headers["content-disposition"]?.split("filename=")[1]?.replace(/"/g, "") || "download.bin";
+  const contentType = response.headers["content-type"] || "application/octet-stream";
+  return {
+    stream: response.data,
+    fileName,
+    contentType
+  };
+}
 
 // src/utils/microsoft-connect.ts
 import axios2 from "axios";
-import qs from "qs";
+import * as qs from "qs";
 var tokenCache = /* @__PURE__ */ new Map();
 async function generateMicrosoftAccessToken(config, isShowLog = false) {
   const { tenantId, clientId, clientSecret, scope, grantType } = config;
@@ -333,12 +597,37 @@ ${JSON.stringify(res.data, null, 2)}`
     extExpiresIn: ext_expires_in
   };
 }
+async function renewMicrosoftToken(config, isShowLog = false) {
+  const cacheKey = `${config.clientId}:${config.scope}`;
+  const cached = tokenCache.get(cacheKey);
+  const now = Date.now();
+  if (cached && now < cached.expiresAt) {
+    if (isShowLog) console.log("[kas-on-cloud]: Using cached Microsoft token");
+    return cached.token;
+  }
+  if (isShowLog) console.log("[kas-on-cloud]: Requesting new Microsoft token...");
+  const tokenData = await generateMicrosoftAccessToken(config);
+  const expiresAt = now + (tokenData.expiresIn - 60) * 1e3;
+  tokenCache.set(cacheKey, {
+    token: tokenData.accessToken,
+    expiresAt
+  });
+  return tokenData.accessToken;
+}
 export {
   clearCache,
+  downloadItemFromSharepoint,
   generateMicrosoftAccessToken,
+  getAllDrivesFromSite,
   getDocumentLibraryId,
+  getDriveIdFromSite,
+  getFolderChildrenFromSharepoint,
+  getItemByIdFromSharepoint,
+  getItemByPathFromSharepoint,
   getItemListFromSharepoint,
   getSiteId,
   multiUploadToSharepoint,
+  renewMicrosoftToken,
+  searchItemInSharepoint,
   uploadToSharePoint
 };
