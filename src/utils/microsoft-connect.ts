@@ -100,3 +100,26 @@ export async function generateMicrosoftAccessToken(
     extExpiresIn: ext_expires_in,
   };
 }
+
+export async function renewMicrosoftToken(config: MicrosoftConfig, isShowLog = false) {
+  const cacheKey = `${config.clientId}:${config.scope}`;
+  const cached = tokenCache.get(cacheKey);
+  const now = Date.now();
+
+  if (cached && now < cached.expiresAt) {
+    if (isShowLog) console.log("[kas-on-cloud]: Using cached Microsoft token");
+    return cached.token;
+  }
+
+  if (isShowLog) console.log("[kas-on-cloud]: Requesting new Microsoft token...");
+
+  const tokenData = await generateMicrosoftAccessToken(config);
+  const expiresAt = now + (tokenData.expiresIn - 60) * 1000;
+
+  tokenCache.set(cacheKey, {
+    token: tokenData.accessToken,
+    expiresAt,
+  });
+
+  return tokenData.accessToken;
+}
