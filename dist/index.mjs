@@ -514,14 +514,28 @@ async function downloadItemFromSharepoint({
   const url = driveId ? `https://graph.microsoft.com/v1.0/sites/${siteId}/drives/${driveId}/items/${itemId}/content` : `https://graph.microsoft.com/v1.0/sites/${siteId}/drive/items/${itemId}/content`;
   const response = await axios.get(url, {
     responseType: "stream",
-    headers: { Authorization: `Bearer ${accessToken}` }
+    headers: { Authorization: `Bearer ${accessToken}`, Accept: "*/*" },
+    decompress: false,
+    validateStatus: () => true
   });
-  const fileName = response.headers["content-disposition"]?.split("filename=")[1]?.replace(/"/g, "") || "download.bin";
+  if (response.status >= 400) {
+    let errMsg = `Graph API responded with ${response.status}`;
+    try {
+      const chunks = [];
+      for await (const chunk of response.data) chunks.push(chunk);
+      errMsg += ": " + Buffer.concat(chunks).toString("utf8");
+    } catch {
+    }
+    throw new Error(`[kas-on-cloud]: ${errMsg}`);
+  }
+  const disposition = response.headers["content-disposition"] || "";
+  const fileName = disposition.match(/filename\*?="?([^"]+)"?/)?.[1] || "download.bin";
   const contentType = response.headers["content-type"] || "application/octet-stream";
   return {
     stream: response.data,
     fileName,
-    contentType
+    contentType,
+    contentDisposition: disposition
   };
 }
 
