@@ -105,4 +105,5 @@ export interface SharepointDownloadResult {
   stream: Readable;
   fileName: string;
   contentType: string;
+  contentDisposition: string;
 }

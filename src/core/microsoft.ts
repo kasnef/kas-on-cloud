@@ -695,13 +695,25 @@ export async function downloadItemFromSharepoint({
 
   const response = await axios.get(url, {
     responseType: "stream",
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { Authorization: `Bearer ${accessToken}`, Accept: "*/*" },
+    decompress: false,
+    validateStatus: () => true,
   });
 
+  if (response.status >= 400) {
+    let errMsg = `Graph API responded with ${response.status}`;
+    try {
+      const chunks: Buffer[] = [];
+      for await (const chunk of response.data) chunks.push(chunk);
+      errMsg += ": " + Buffer.concat(chunks).toString("utf8");
+    } catch {}
+    throw new Error(`[kas-on-cloud]: ${errMsg}`);
+  }
+
+  // info
+  const disposition = response.headers["content-disposition"] || "";
   const fileName =
-    response.headers["content-disposition"]
-      ?.split("filename=")[1]
-      ?.replace(/"/g, "") || "download.bin";
+    disposition.match(/filename\*?="?([^"]+)"?/)?.[1] || "download.bin";
 
   const contentType =
     response.headers["content-type"] || "application/octet-stream";
@@ -710,6 +722,7 @@ export async function downloadItemFromSharepoint({
     stream: response.data,
     fileName,
     contentType,
+    contentDisposition: disposition,
   };
 }
 
