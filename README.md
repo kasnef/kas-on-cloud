@@ -648,23 +648,41 @@ downloadItemFromSharepoint({
 ```ts
 import { downloadItemFromSharepoint } from "kas-on-cloud";
 
-const { fileName, buffer } = await downloadItemFromSharepoint({
+const file = await downloadItemFromSharepoint({
   siteId: "your-site-id",
   itemId: "01ABCDEFG",
   accessToken,
 });
 
 // Example BE proxy:
-res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
-res.send(buffer);
+res.setHeader('Content-Type', file.contentType);
+res.setHeader('Content-Disposition', file.contentDisposition);
+file.stream.pipe(res);
 ```
 
 #### ↪️ Response
 
 ```ts
 {
-  "fileName": "Report.pdf",
-  "buffer": "<Buffer ...>"
+  stream: Readable {
+    _readableState: {
+      objectMode: false,
+      highWaterMark: 16384,
+      buffer: BufferList { head: null, tail: null, length: 0 },
+      length: 0,
+      pipes: null,
+      flowing: true,
+      ended: false,
+      endEmitted: false
+    },
+    readable: true,
+    _events: [Object: null prototype] { end: [Function: onend] },
+    _eventsCount: 1
+  },
+
+  fileName: "Report_Q3_2025.xlsx",
+  contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  contentDisposition: 'attachment; filename="Report_Q3_2025.xlsx"',
 }
 ```
 

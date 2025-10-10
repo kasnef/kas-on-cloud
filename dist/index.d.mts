@@ -62,6 +62,7 @@ interface SharepointDownloadResult {
     stream: Readable;
     fileName: string;
     contentType: string;
+    contentDisposition: string;
 }
 
 declare function getSiteId(tenantName: string, siteName: string, accessToken: string, isShowLog?: boolean): Promise<any>;

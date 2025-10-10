@@ -1,16 +1,53 @@
 # 📝 Changelog
 
-All notable changes to this project will be recorded in this file.
+> All notable changes to this project will be recorded in this file.
+
+---
+
+## 🚀 [1.0.11] - 2025-10-10
+
+### ✨ Added
+
+- Added `contentDisposition` fields to the return object for richer metadata support.
+- Added timeout and `maxRedirects` options to the axios.get call for better request control and reliability.
+- Added explicit `validateStatus` to ensure clearer error handling on non-2xx responses.
+
+### 🛠️ Changed
+
+- Improved filename extraction logic from the `Content-Disposition` header (handles both quoted and unquoted filenames).
+- Enhanced response header parsing to safely handle missing fields.
+- Simplified SharePoint URL generation logic to use either `driveId` or default site drive seamlessly.
+- Streamlined type definitions for `SharepointDownloadResult` to include new optional metadata.
+
+### 🧩 Updated Return Type
+
+```JSON
+{
+  stream: Readable;
+  fileName: string;
+  contentType: string;
+  contentDisposition?: string;
+  contentLength?: number;
+}
+```
+
+### ✅ Benefits
+
+- Allows developers to easily set `HTTP` headers when re-streaming files.
+- More resilient against SharePoint API quirks (redirects, missing headers, etc.).
+- Easier debugging with clearer error surfaces and request control.
 
 ---
 
 ## 🚀 [1.0.10] - 2025-10-09 - Fix build & republish (09/10/2025)
 
 ### 🛠 Fixes & Maintenance
+
 - Rebuilt package due to missing compiled files in version **1.0.9**.
 - Re-published to ensure all new SharePoint handler functions are properly included in the distributed build.
 
 ### ⚙️ Technical Notes
+
 - No functional code changes.
 - No API modifications.
 - Same features as version **1.0.9**:
@@ -24,30 +61,31 @@ All notable changes to this project will be recorded in this file.
   - `renewMicrosoftToken`
 
 > ✅ This release only fixes the missing build artifacts — functionally identical to `v1.0.9`.
+
 ---
 
 ## 🚀 [1.0.9] - 2025-10-09
 
 ### ✨ Added
 
-* **getDriveIdFromSite()** → Fetch the default Drive ID for a SharePoint site using `siteId`.
-* **getAllDrivesFromSite()** → Retrieve all document libraries (drives) in a SharePoint site.
-* **getItemByIdFromSharepoint()** → Retrieve detailed information about a file or folder by its `itemId`.
-* **getItemByPathFromSharepoint()** → Retrieve item metadata using a file or folder path.
-* **getFolderChildrenFromSharepoint()** → List all children items within a given folder by ID or path.
-* **searchItemInSharepoint()** → Search for files and folders in a SharePoint drive by keyword.
-* **downloadItemFromSharepoint()** → Stream a file’s content for download via Microsoft Graph API.
-* **renewMicrosoftToken()** → Automatically renew and cache Microsoft OAuth tokens for seamless reauthentication.
+- **getDriveIdFromSite()** → Fetch the default Drive ID for a SharePoint site using `siteId`.
+- **getAllDrivesFromSite()** → Retrieve all document libraries (drives) in a SharePoint site.
+- **getItemByIdFromSharepoint()** → Retrieve detailed information about a file or folder by its `itemId`.
+- **getItemByPathFromSharepoint()** → Retrieve item metadata using a file or folder path.
+- **getFolderChildrenFromSharepoint()** → List all children items within a given folder by ID or path.
+- **searchItemInSharepoint()** → Search for files and folders in a SharePoint drive by keyword.
+- **downloadItemFromSharepoint()** → Stream a file’s content for download via Microsoft Graph API.
+- **renewMicrosoftToken()** → Automatically renew and cache Microsoft OAuth tokens for seamless reauthentication.
 
 ### 🧩 Improved
 
-* Unified error messages with `[kas-on-cloud]` prefix for better debugging consistency.
-* Enhanced log outputs with `isShowLog` flag across multiple SharePoint helper functions.
+- Unified error messages with `[kas-on-cloud]` prefix for better debugging consistency.
+- Enhanced log outputs with `isShowLog` flag across multiple SharePoint helper functions.
 
 ### 🧰 Technical
 
-* Added internal caching layer for Microsoft tokens using an in-memory `tokenCache`.
-* Improved response mapping for SharePoint API to include file/folder type and metadata fields.
+- Added internal caching layer for Microsoft tokens using an in-memory `tokenCache`.
+- Improved response mapping for SharePoint API to include file/folder type and metadata fields.
 
 ---
 
@@ -55,11 +93,11 @@ All notable changes to this project will be recorded in this file.
 
 ### 💠 Updated
 
-* Change the response of `uploadToSharePoint()` and `multiUploadToSharepoint()`
+- Change the response of `uploadToSharePoint()` and `multiUploadToSharepoint()`
 
 ### 🧩 Improved
 
-* Updated docs and typings for SharePoint helper utilities.
+- Updated docs and typings for SharePoint helper utilities.
 
 ---
 
@@ -73,9 +111,10 @@ All notable changes to this project will be recorded in this file.
 
 ### 🧩 Improved
 
-* Updated docs and typings for SharePoint helper utilities.
+- Updated docs and typings for SharePoint helper utilities.
 
 ### 🐞 Fixed bug
+
 - Fixed an issue where the library was unusable (My bad for not testing thoroughly :<)
 - Fixed typos in code parameters
 
@@ -89,11 +128,13 @@ All notable changes to this project will be recorded in this file.
 - Ideal for automation, server-side upload tasks, or building internal tools.
 
 ### 📦 Package Info
+
 - `Node.js` 18+
 - Bundled with tsup for both ESM & CommonJS support
 - Ready for future OneDrive integration (folder structure prepared)
 
 ### 📂 File structure
+
 ```bash
 dist/                      ← Built code
 src/
